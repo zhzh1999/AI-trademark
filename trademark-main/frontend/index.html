@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI辅助商标注册系统演示</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background: #f7f7f7;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .input-section, .output-section {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    label {
+      display: inline-block;
+      width: 120px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 300px;
+      padding: 5px;
+    }
+    button {
+      padding: 6px 12px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .result-table th, .result-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    .flag {
+      font-size: 1.2em;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>AI辅助商标注册系统演示</h1>
+  
+  <!-- 输入区域 -->
+  <div class="input-section">
+    <h2>输入</h2>
+    <div style="margin-bottom:10px;">
+      <label>商品描述:</label>
+      <input type="text" id="productDescription" placeholder="例如：智能手机" />
+    </div>
+    <div style="margin-bottom:10px;">
+      <label>商标名称:</label>
+      <input type="text" id="trademarkName" placeholder="例如：AIPhone" />
+    </div>
+    <button onclick="doTranslate()">功能1：翻译术语</button>
+    <button onclick="doClassification()">功能2：商品分类</button>
+    <button onclick="doRegistration()">功能3：注册状态</button>
+  </div>
+
+  <!-- 输出区域 -->
+  <div class="output-section" id="outputSection">
+    <h2>结果</h2>
+    <div id="resultContainer"></div>
+  </div>
+
+  <script>
+    // 后端API基本URL(本地开发环境)
+    const BASE_URL = "http://localhost:8000";
+
+    // 按钮1：翻译术语
+    async function doTranslate() {
+      const productDescription = document.getElementById("productDescription").value;
+      if (!productDescription) {
+        alert("请先输入商品描述");
+        return;
+      }
+      const payload = {
+        product_description: productDescription
+      };
+      const res = await fetch(`${BASE_URL}/translate_terms`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      renderTranslateResult(data);
+    }
+
+    // 按钮2：商品分类
+    async function doClassification() {
+      const productDescription = document.getElementById("productDescription").value;
+      if (!productDescription) {
+        alert("请先输入商品描述");
+        return;
+      }
+      const payload = {
+        product_description: productDescription
+      };
+      const res = await fetch(`${BASE_URL}/get_classification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      renderClassificationResult(data);
+    }
+
+    // 按钮3：商标注册状态
+    async function doRegistration() {
+      const productDescription = document.getElementById("productDescription").value;
+      const trademarkName = document.getElementById("trademarkName").value;
+      if (!productDescription || !trademarkName) {
+        alert("请先输入商品描述和商标名称");
+        return;
+      }
+      const payload = {
+        product_description: productDescription,
+        trademark_name: trademarkName
+      };
+      const res = await fetch(`${BASE_URL}/get_registration_status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      renderRegistrationResult(data);
+    }
+
+    // 渲染翻译术语结果（功能1）
+    function renderTranslateResult(terms) {
+      const container = document.getElementById("resultContainer");
+      container.innerHTML = ""; // 清空旧数据
+
+      const table = document.createElement("table");
+      table.className = "result-table";
+      const thead = document.createElement("thead");
+      const tbody = document.createElement("tbody");
+
+      thead.innerHTML = `
+        <tr>
+          <th>国家/地区</th>
+          <th>翻译术语</th>
+        </tr>
+      `;
+      // 这里使用国旗Emoji做简单演示
+      const flags = {
+        "US": "🇺🇸",
+        "China": "🇨🇳",
+        "EU": "🇪🇺",
+        "Germany": "🇩🇪",
+        "Japan": "🇯🇵",
+        "Korea": "🇰🇷",
+        "India": "🇮🇳",
+        "UK": "🇬🇧",
+        "France": "🇫🇷",
+        "Russia": "🇷🇺"
+      };
+
+      for (const [country, term] of Object.entries(terms)) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><span class="flag">${flags[country] || ""}</span>${country}</td>
+          <td>${term}</td>
+        `;
+        tbody.appendChild(row);
+      }
+
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+
+    // 渲染分类结果（功能2）
+    function renderClassificationResult(classifications) {
+      const container = document.getElementById("resultContainer");
+      container.innerHTML = ""; // 清空旧数据
+
+      const table = document.createElement("table");
+      table.className = "result-table";
+      const thead = document.createElement("thead");
+      const tbody = document.createElement("tbody");
+
+      thead.innerHTML = `
+        <tr>
+          <th>国家/地区</th>
+          <th>Class</th>
+          <th>Subclass</th>
+        </tr>
+      `;
+      const flags = {
+        "US": "🇺🇸",
+        "China": "🇨🇳",
+        "EU": "🇪🇺",
+        "Germany": "🇩🇪",
+        "Japan": "🇯🇵",
+        "Korea": "🇰🇷",
+        "India": "🇮🇳",
+        "UK": "🇬🇧",
+        "France": "🇫🇷",
+        "Russia": "🇷🇺"
+      };
+
+      for (const [country, obj] of Object.entries(classifications)) {
+        const { mainclass, subclass } = obj; // 修正为 mainclass 和 subclass
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><span class="flag">${flags[country] || ""}</span>${country}</td>
+          <td>${mainclass}</td>
+          <td>${subclass}</td>
+        `;
+        tbody.appendChild(row);
+      }
+
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+
+    // 渲染注册状态结果（功能3）
+    function renderRegistrationResult(statusData) {
+      const container = document.getElementById("resultContainer");
+      container.innerHTML = ""; // 清空旧数据
+
+      const table = document.createElement("table");
+      table.className = "result-table";
+      const thead = document.createElement("thead");
+      const tbody = document.createElement("tbody");
+
+      thead.innerHTML = `
+        <tr>
+          <th>国家/地区</th>
+          <th>注册状态</th>
+          <th>其他信息</th>
+          <th>注册价格</th>
+        </tr>
+      `;
+      const flags = {
+        "US": "🇺🇸",
+        "China": "🇨🇳",
+        "EU": "🇪🇺",
+        "Germany": "🇩🇪",
+        "Japan": "🇯🇵",
+        "Korea": "🇰🇷",
+        "India": "🇮🇳",
+        "UK": "🇬🇧",
+        "France": "🇫🇷",
+        "Russia": "🇷🇺"
+      };
+
+      for (const [country, obj] of Object.entries(statusData)) {
+        const priceCell =
+          obj.status === "Registered"
+            ? "NOT available"
+            : `<a href="https://en.iphouse.cn/" target="_blank">$500</a>`;
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><span class="flag">${flags[country] || ""}</span>${country}</td>
+          <td>${obj.status}</td>
+          <td>${obj.info || ""}</td>
+          <td>${priceCell}</td>
+        `;
+        tbody.appendChild(row);
+      }
+
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+
+
+</script>
+</body>
+</html>
