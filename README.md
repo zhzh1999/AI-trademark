@@ -1,2 +1,2 @@
-# hexmark
+# AI trademark
 trademark
